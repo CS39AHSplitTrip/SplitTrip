@@ -2,6 +2,8 @@
 
 > Log shared expenses in seconds, and settle up with the fewest possible transfers.
 
+🌐 **Live site:** https://cs39ahsplittrip.github.io/SplitTrip/
+
 ## 🎯 Product Vision
 
 | | |

@@ -23,7 +23,7 @@
 
 - **📲 One-tap payments:** pay each settle-up transfer through Venmo, PayPal or Cash App, with the person and amount already filled in.
 - **🏷️ Payment usernames:** each member adds their payment handles once, so others always know where to send money.
-- **✅ Mark as paid:** record a payment when it's done, and the balances update.
+- **✅ One-tap confirm:** after paying, confirm with one tap and the balances update, with no form to fill in.
 
 **🧩 From Spliit**
 

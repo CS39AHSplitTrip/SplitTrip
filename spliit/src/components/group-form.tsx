@@ -75,7 +75,14 @@ export function GroupForm({
           information: group.information ?? '',
           currency: group.currency ?? '',
           currencyCode: group.currencyCode ?? '',
-          participants: group.participants,
+          // SplitTrip: fills in the payment boxes with what's saved, or leaves them empty (#27)
+          participants: group.participants.map((participant) => ({
+            id: participant.id,
+            name: participant.name,
+            venmoUsername: participant.venmoUsername ?? '',
+            paypalUsername: participant.paypalUsername ?? '',
+            cashAppCashtag: participant.cashAppCashtag ?? '',
+          })),
         }
       : {
           name: '',
@@ -95,6 +102,25 @@ export function GroupForm({
     keyName: 'key',
   })
   const sendEvent = useAnalytics()
+
+  // SplitTrip: the three payment apps we ask each member about (#27)
+  const paymentFields = [
+    {
+      name: 'venmoUsername',
+      label: t('Participants.venmoLabel'),
+      placeholder: t('Participants.venmoPlaceholder'),
+    },
+    {
+      name: 'paypalUsername',
+      label: t('Participants.paypalLabel'),
+      placeholder: t('Participants.paypalPlaceholder'),
+    },
+    {
+      name: 'cashAppCashtag',
+      label: t('Participants.cashAppLabel'),
+      placeholder: t('Participants.cashAppPlaceholder'),
+    },
+  ] as const
 
   const [activeUser, setActiveUser] = useState<string | null>(null)
   useEffect(() => {
@@ -313,6 +339,34 @@ export function GroupForm({
                       </FormItem>
                     )}
                   />
+                  {/* SplitTrip: the sign-up boxes for the payment apps, under each member's name (#27) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2 mb-2">
+                    {paymentFields.map(({ name, label, placeholder }) => (
+                      <FormField
+                        key={name}
+                        control={form.control}
+                        name={`participants.${index}.${name}`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs text-muted-foreground">
+                              {label}
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                className="text-base"
+                                placeholder={placeholder}
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                {...field}
+                                value={field.value ?? ''}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
                 </li>
               ))}
             </ul>

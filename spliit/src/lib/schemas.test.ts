@@ -1,4 +1,4 @@
-import { expenseFormSchema } from './schemas'
+import { expenseFormSchema, groupFormSchema } from './schemas'
 
 function byAmountExpense(amount: string, shares: string[]) {
   return {
@@ -57,6 +57,55 @@ describe('expenseFormSchema, split by amount', () => {
     expect(issueMessages(byAmountExpense('100', ['60', '']))).toEqual([
       'noZeroShares',
       'amountSum',
+    ])
+  })
+})
+
+// SplitTrip: checks the payment username rules from #27
+describe('groupFormSchema, payment usernames', () => {
+  function groupWithAnna(usernames: Record<string, unknown>) {
+    return {
+      name: 'Trip',
+      currency: '$',
+      currencyCode: 'USD',
+      participants: [{ name: 'Anna', ...usernames }],
+    }
+  }
+
+  it('takes off the "@" and "$" people type in front', () => {
+    const result = groupFormSchema.parse(
+      groupWithAnna({
+        venmoUsername: '@anna-k',
+        paypalUsername: ' annak ',
+        cashAppCashtag: '$annak',
+      }),
+    )
+    expect(result.participants[0]).toMatchObject({
+      venmoUsername: 'anna-k',
+      paypalUsername: 'annak',
+      cashAppCashtag: 'annak',
+    })
+  })
+
+  it('saves empty boxes as nothing', () => {
+    const result = groupFormSchema.parse(
+      groupWithAnna({ venmoUsername: '', paypalUsername: '   ' }),
+    )
+    expect(result.participants[0].venmoUsername).toBeNull()
+    expect(result.participants[0].paypalUsername).toBeNull()
+  })
+
+  it('still works when no usernames are sent at all', () => {
+    expect(groupFormSchema.safeParse(groupWithAnna({})).success).toBe(true)
+  })
+
+  it('says no to usernames with spaces', () => {
+    const result = groupFormSchema.safeParse(
+      groupWithAnna({ venmoUsername: 'anna k' }),
+    )
+    expect(result.success).toBe(false)
+    expect(result.error?.issues.map((i) => i.message)).toEqual([
+      'noSpacesInUsername',
     ])
   })
 })

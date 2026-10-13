@@ -140,7 +140,13 @@
       "add": "Add participant",
       "John": "John",
       "Jane": "Jane",
-      "Jack": "Jack"
+      "Jack": "Jack",
+      "venmoLabel": "Venmo username (optional)",
+      "venmoPlaceholder": "anna-k",
+      "paypalLabel": "PayPal.me username (optional)",
+      "paypalPlaceholder": "annak",
+      "cashAppLabel": "Cash App $cashtag (optional)",
+      "cashAppPlaceholder": "annak"
     },
     "Settings": {
       "title": "Local settings",
@@ -468,6 +474,7 @@
     "max5000": "Enter at most 5,000 characters.",
     "max10000": "Enter at most 10,000 characters.",
     "duplicateParticipantName": "Another participant already has this name.",
+    "noSpacesInUsername": "Usernames can't contain spaces",
     "titleRequired": "Please enter a title.",
     "invalidNumber": "Invalid number.",
     "amountRequired": "You must enter an amount.",

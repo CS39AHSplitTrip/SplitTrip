@@ -21,10 +21,16 @@ export async function createGroup(groupFormValues: GroupFormValues) {
       currencyCode: groupFormValues.currencyCode,
       participants: {
         createMany: {
-          data: groupFormValues.participants.map(({ name }) => ({
-            id: randomId(),
-            name,
-          })),
+          // SplitTrip: also saves each member's payment usernames (#27)
+          data: groupFormValues.participants.map(
+            ({ name, venmoUsername, paypalUsername, cashAppCashtag }) => ({
+              id: randomId(),
+              name,
+              venmoUsername,
+              paypalUsername,
+              cashAppCashtag,
+            }),
+          ),
         },
       },
     },
@@ -321,8 +327,12 @@ export async function updateGroup(
           .filter((participant) => participant.id !== undefined)
           .map((participant) => ({
             where: { id: participant.id },
+            // SplitTrip: updates the payment usernames along with the name (#27)
             data: {
               name: participant.name,
+              venmoUsername: participant.venmoUsername,
+              paypalUsername: participant.paypalUsername,
+              cashAppCashtag: participant.cashAppCashtag,
             },
           })),
         createMany: {
@@ -331,6 +341,9 @@ export async function updateGroup(
             .map((participant) => ({
               id: randomId(),
               name: participant.name,
+              venmoUsername: participant.venmoUsername,
+              paypalUsername: participant.paypalUsername,
+              cashAppCashtag: participant.cashAppCashtag,
             })),
         },
       },

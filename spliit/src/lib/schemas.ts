@@ -5,6 +5,20 @@ import * as z from 'zod'
 export const GROUP_INFORMATION_MAX = 10_000
 export const EXPENSE_NOTES_MAX = 5_000
 
+// SplitTrip: cleans up a payment username before saving it (#27).
+// Gets rid of extra spaces and the "@" or "$" people type out of habit,
+// so "@anna-k" turns into "anna-k". Empty boxes get saved as nothing (null).
+const paymentUsername = z
+  .string()
+  .nullish()
+  .transform((value) => {
+    const cleaned = (value ?? '').trim().replace(/^[@$]+/, '')
+    return cleaned.length > 0 ? cleaned : null
+  })
+  .pipe(
+    z.string().max(50, 'max50').regex(/^\S+$/, 'noSpacesInUsername').nullable(),
+  )
+
 export const groupFormSchema = z
   .object({
     name: z.string().min(2, 'min2').max(50, 'max50'),
@@ -16,6 +30,10 @@ export const groupFormSchema = z
         z.object({
           id: z.string().max(64).optional(),
           name: z.string().min(2, 'min2').max(50, 'max50'),
+          // SplitTrip: the payment apps this member can get paid on (#27)
+          venmoUsername: paymentUsername.optional(),
+          paypalUsername: paymentUsername.optional(),
+          cashAppCashtag: paymentUsername.optional(),
         }),
       )
       .min(1)

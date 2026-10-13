@@ -30,6 +30,10 @@ model Participant {
   name            String
   group           Group            @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId         String
+  // SplitTrip: where people can send this member money. All optional, so old groups still work
+  venmoUsername   String?
+  paypalUsername  String?
+  cashAppCashtag  String?
   expensesPaidBy  Expense[]
   expensesPaidFor ExpensePaidFor[]
 }

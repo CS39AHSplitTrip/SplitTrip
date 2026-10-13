@@ -6,6 +6,21 @@
 
 🧩 **Built on [Spliit](https://github.com/spliit-app/spliit)**, a free and open-source expense-splitting app (MIT License).
 
+## 🚀 Quick start
+
+You need [Node.js 24+](https://nodejs.org/) and [Docker Desktop](https://www.docker.com/products/docker-desktop/). Start Docker Desktop, then run:
+
+```sh
+cd spliit
+npm run local
+```
+
+Open http://localhost:3000. Use the same command every time, including after you pull new changes: it only does what's missing (database, `.env`, packages, new migrations) and then starts the app.
+
+- **Port 3000 already used?** Run `PORT=3001 npm run local`, or add `PORT=3001` to `spliit/.env`.
+- **Stop the app:** press `Ctrl+C`. The database keeps running in Docker; stop it with `docker stop spliit-db`.
+- **On Windows:** run it from Git Bash or WSL.
+
 ## 🎯 Product Vision
 
 | | |

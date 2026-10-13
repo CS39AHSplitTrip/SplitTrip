@@ -51,3 +51,7 @@ postgres-data
 
 # performance suite output (perf/run.ts)
 /perf-report.json
+
+# SplitTrip: written by `next dev` on every start, so each teammate gets their own copy
+/AGENTS.md
+/CLAUDE.md

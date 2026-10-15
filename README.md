@@ -1,21 +1,46 @@
 # ✈️ SplitTrip
 
-> Log shared expenses in seconds, and settle up with the fewest possible transfers.
+> Log shared expenses in seconds, see the fewest transfers needed, and pay each one in a single tap.
 
 🌐 **Live site:** https://cs39ahsplittrip.github.io/SplitTrip/
+
+🧩 **Built on [Spliit](https://github.com/spliit-app/spliit)**, a free and open-source expense-splitting app (MIT License).
+
+## 🚀 Quick start
+
+You need [Node.js 24+](https://nodejs.org/) and [Docker Desktop](https://www.docker.com/products/docker-desktop/). Start Docker Desktop, then run:
+
+```sh
+cd spliit
+npm run local
+```
+
+Open http://localhost:3000. Use the same command every time, including after you pull new changes: it only does what's missing (database, `.env`, packages, new migrations) and then starts the app.
+
+- **Port 3000 already used?** Run `PORT=3001 npm run local`, or add `PORT=3001` to `spliit/.env`.
+- **Stop the app:** press `Ctrl+C`. The database keeps running in Docker; stop it with `docker stop spliit-db`.
+- **On Windows:** run it from Git Bash or WSL.
 
 ## 🎯 Product Vision
 
 | | |
 |---|---|
 | **For** | groups of friends who travel or spend money together |
-| **Who** | struggle to keep track of who paid for what and who owes whom |
-| **SplitTrip** | is a shared-expense web app |
-| **That** | lets every member log payments in seconds and instantly shows the fewest transfers needed to settle up |
-| **Unlike** | Splitwise and Tricount, which require accounts and mostly split costs evenly |
-| **Our product** | lets anyone join by link with no sign-up, and lets each person pay only for the expenses they are responsible for, so everyone pays their fair share |
+| **Who** | struggle to keep track of who paid for what, and then have to chase each other to actually pay it back |
+| **SplitTrip** | is a shared-expense web app built on the open-source app Spliit |
+| **That** | lets every member log payments in seconds, shows the fewest transfers needed to settle up, and opens Venmo, PayPal or Cash App with the amount already filled in |
+| **Unlike** | Splitwise, which requires an account, and free open-source apps like Spliit and SplitPro, which stop at showing who owes whom |
+| **Our product** | lets anyone join by link with no sign-up and turns every "you owe" into a one-tap payment, so the group actually settles up |
 
 ## ✨ Key Features
+
+**🆕 What SplitTrip adds**
+
+- **📲 One-tap payments:** pay each settle-up transfer through Venmo, PayPal or Cash App, with the person and amount already filled in.
+- **🏷️ Payment usernames:** each member adds their payment handles once, so others always know where to send money.
+- **✅ One-tap confirm:** after paying, confirm with one tap and the balances update, with no form to fill in.
+
+**🧩 From Spliit**
 
 - **🔗 Join by link:** no accounts and no sign-up. Share a link and your group is in.
 - **⚡ Quick logging:** add a payment in seconds.

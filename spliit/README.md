@@ -62,11 +62,31 @@ Here is the current state of translation:
 
 ## Run locally
 
+Start Docker Desktop, then run:
+
+```sh
+npm run local
+```
+
+That's the only command, the first time and every time after. It starts the
+local database, creates `.env` from `.env.example` if you don't have one,
+installs packages when they are missing or changed, applies new database
+migrations, and starts the app at http://localhost:3000. Steps that are already
+done are skipped.
+
+If port 3000 is used by another project, run `PORT=3001 npm run local`, or put
+`PORT=3001` in your `.env` so you don't have to type it.
+
+<details>
+<summary>The same steps by hand</summary>
+
 1. Clone the repository (or fork it if you intend to contribute)
 2. Start a PostgreSQL server. You can run `./scripts/start-local-db.sh` if you don’t have a server already.
 3. Copy the file `.env.example` as `.env`
 4. Run `npm install` to install dependencies. This will also apply database migrations and update Prisma Client.
 5. Run `npm run dev` to start the development server
+
+</details>
 
 ## End-to-end tests
 
@@ -114,7 +134,7 @@ triggered manually and runs automatically on release tags.
 1. Run `npm run build-image` to build the docker image from the Dockerfile
 2. Copy the file `container.env.example` as `container.env`
 3. Run `npm run start-container` to start the postgres and the spliit2 containers
-4. You can access the app by browsing to http://localhost:3000
+4. You can access the app by browsing to http://localhost:3001
 
 ## Run with Docker compose
 

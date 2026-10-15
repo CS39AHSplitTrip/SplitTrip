@@ -3,7 +3,8 @@ services:
     build: .
     image: spliit:latest
     ports:
-      - 3000:3000
+      # SplitTrip: open it at localhost:3001, since 3000 is often used by other projects
+      - 3001:3000
     env_file:
       - container.env
     depends_on:

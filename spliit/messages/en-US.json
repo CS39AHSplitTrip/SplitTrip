@@ -336,7 +336,10 @@
       "description": "Here are suggestions for optimized reimbursements between participants.",
       "noImbursements": "It looks like your group doesn’t need any reimbursement 😁",
       "owes": "<strong>{from}</strong> owes <strong>{to}</strong>",
-      "markAsPaid": "Mark as paid"
+      "markAsPaid": "Mark as paid",
+      "payWith": "Pay with {app}",
+      "noPaymentApp": "{name} hasn't added a payment app yet.",
+      "addPaymentApp": "Add one in Settings"
     }
   },
   "Stats": {

@@ -2,7 +2,7 @@
 
 > Log shared expenses in seconds, see the fewest transfers needed, and pay each one in a single tap.
 
-🌐 **Live site:** https://cs39ahsplittrip.github.io/SplitTrip/
+🌐 **Live site:** https://splittrip-mauve.vercel.app
 
 🧩 **Built on [Spliit](https://github.com/spliit-app/spliit)**, a free and open-source expense-splitting app (MIT License).
 

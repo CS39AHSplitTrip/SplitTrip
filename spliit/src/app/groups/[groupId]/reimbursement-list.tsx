@@ -1,11 +1,19 @@
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/use-toast'
 import { Participant } from '@/generated/prisma/browser'
 import { Reimbursement } from '@/lib/balances'
+import {
+  getReimbursementExpense,
+  getReimbursementKey,
+} from '@/lib/confirm-payment'
 import { Currency } from '@/lib/currency'
+import { useActiveUser } from '@/lib/hooks'
 import { getPaymentLinks, PaymentApp } from '@/lib/payment-links'
 import { formatCurrency } from '@/lib/utils'
+import { trpc } from '@/trpc/client'
 import { useLocale, useTranslations } from 'next-intl'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 // SplitTrip: the app names on the "Pay with…" buttons (#28)
 const paymentAppNames: Record<PaymentApp, string> = {
@@ -29,6 +37,82 @@ export function ReimbursementList({
 }: Props) {
   const locale = useLocale()
   const t = useTranslations('Balances.Reimbursements')
+  const tExpense = useTranslations('ExpenseForm')
+  const { toast } = useToast()
+  const utils = trpc.useUtils()
+  const activeUserId = useActiveUser(groupId)
+  const { mutateAsync: createExpense, isPending: isSaving } =
+    trpc.groups.expenses.create.useMutation()
+
+  // SplitTrip: the transfer someone tapped "Pay with…" on, and the one we're
+  // asking "Did you pay…?" about once they come back to the tab (#29).
+  // It's also kept in sessionStorage, because phones often reload the page
+  // after you switch to the payment app and back.
+  const storageKey = `${groupId}-pendingPayment`
+  const [pendingKey, setPendingKey] = useState<string | null>(null)
+  const [askingKey, setAskingKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(storageKey)
+      if (saved) {
+        setPendingKey(saved)
+        setAskingKey(saved)
+      }
+    } catch {}
+  }, [storageKey])
+
+  useEffect(() => {
+    if (!pendingKey) return
+    const onReturn = () => {
+      if (document.visibilityState === 'visible') setAskingKey(pendingKey)
+    }
+    document.addEventListener('visibilitychange', onReturn)
+    window.addEventListener('focus', onReturn)
+    return () => {
+      document.removeEventListener('visibilitychange', onReturn)
+      window.removeEventListener('focus', onReturn)
+    }
+  }, [pendingKey])
+
+  const startPayment = (key: string) => {
+    setPendingKey(key)
+    setAskingKey(null)
+    try {
+      sessionStorage.setItem(storageKey, key)
+    } catch {}
+  }
+
+  const forgetPayment = () => {
+    setPendingKey(null)
+    setAskingKey(null)
+    try {
+      sessionStorage.removeItem(storageKey)
+    } catch {}
+  }
+
+  // "Yes, I paid": saves the same reimbursement as "Mark as paid", minus the form
+  const confirmPayment = async (reimbursement: Reimbursement) => {
+    try {
+      await createExpense({
+        groupId,
+        expenseFormValues: getReimbursementExpense(
+          reimbursement,
+          tExpense('reimbursement'),
+        ),
+        participantId: activeUserId ?? undefined,
+      })
+    } catch {
+      toast({ description: t('confirmFailed'), variant: 'destructive' })
+      return
+    }
+    forgetPayment()
+    utils.groups.balances.invalidate()
+    utils.groups.expenses.invalidate()
+    utils.groups.activities.invalidate()
+    utils.groups.stats.invalidate()
+  }
+
   if (reimbursements.length === 0) {
     return <p className="text-sm pb-6">{t('noImbursements')}</p>
   }
@@ -42,6 +126,7 @@ export function ReimbursementList({
         const paymentLinks = payee
           ? getPaymentLinks(payee, reimbursement.amount, currency)
           : []
+        const key = getReimbursementKey(reimbursement)
         return (
           <div
             className="py-4"
@@ -67,7 +152,9 @@ export function ReimbursementList({
                   </Link>
                 </Button>
               </div>
-              <div>{formatCurrency(currency, reimbursement.amount, locale)}</div>
+              <div>
+                {formatCurrency(currency, reimbursement.amount, locale)}
+              </div>
             </div>
 
             {/* SplitTrip: "Pay with…" buttons, one for each app the person getting paid signed up for (#28) */}
@@ -75,11 +162,53 @@ export function ReimbursementList({
               <div className="flex flex-wrap gap-2 mt-2">
                 {paymentLinks.map(({ app, url }) => (
                   <Button key={app} variant="outline" size="sm" asChild>
-                    <a href={url} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => startPayment(key)}
+                    >
                       {t('payWith', { app: paymentAppNames[app] })}
                     </a>
                   </Button>
                 ))}
+              </div>
+            )}
+
+            {/* SplitTrip: back from the payment app, so we ask if they paid (#29) */}
+            {askingKey === key && (
+              <div
+                className="mt-2 p-3 rounded-md border bg-muted/50 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+                role="status"
+                data-testid="confirm-payment"
+              >
+                <p>
+                  {t('didYouPay', {
+                    name: payee?.name ?? '',
+                    amount: formatCurrency(
+                      currency,
+                      reimbursement.amount,
+                      locale,
+                    ),
+                  })}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    disabled={isSaving}
+                    onClick={() => confirmPayment(reimbursement)}
+                  >
+                    {t('yesIPaid')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isSaving}
+                    onClick={forgetPayment}
+                  >
+                    {t('notYet')}
+                  </Button>
+                </div>
               </div>
             )}
 

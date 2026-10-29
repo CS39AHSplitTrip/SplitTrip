@@ -52,7 +52,12 @@ export function uniqueSuffix(): string {
 
 export async function createGroup(
   page: Page,
-  opts: { name: string; participants: string[] },
+  opts: {
+    name: string
+    participants: string[]
+    // SplitTrip: PayPal usernames by member name, for the "Pay with…" tests (#29)
+    paypalUsernames?: Record<string, string>
+  },
 ): Promise<string> {
   await page.goto('/groups/create')
 
@@ -83,6 +88,13 @@ export async function createGroup(
       page.locator(`input[name="participants.${i}.name"]`),
       opts.participants[i],
     )
+    const paypal = opts.paypalUsernames?.[opts.participants[i]]
+    if (paypal) {
+      await fillStable(
+        page.locator(`input[name="participants.${i}.paypalUsername"]`),
+        paypal,
+      )
+    }
   }
 
   await page.getByRole('button', { name: 'Create', exact: true }).click()

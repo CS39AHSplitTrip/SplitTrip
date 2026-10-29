@@ -339,7 +339,11 @@
       "markAsPaid": "Mark as paid",
       "payWith": "Pay with {app}",
       "noPaymentApp": "{name} hasn't added a payment app yet.",
-      "addPaymentApp": "Add one in Settings"
+      "addPaymentApp": "Add one in Settings",
+      "didYouPay": "Did you pay {name} {amount}?",
+      "yesIPaid": "Yes, I paid",
+      "notYet": "Not yet",
+      "confirmFailed": "Couldn't save the payment. Please try again."
     }
   },
   "Stats": {

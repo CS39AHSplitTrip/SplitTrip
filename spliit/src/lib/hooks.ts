@@ -128,3 +128,27 @@ export function useCurrencyRate(
     refresh: mutate,
   }
 }
+
+// SplitTrip: today's rate from the group's currency to US dollars, for the
+// "Pay with…" buttons in non-USD groups (#42). USD and custom currencies
+// don't need one, so nothing is fetched for them.
+export function useUsdRate(currencyCode: string) {
+  const url =
+    !!currencyCode.length &&
+    currencyCode !== 'USD' &&
+    `https://api.frankfurter.dev/v1/latest?base=${currencyCode}&symbols=USD`
+  const { data, error, isLoading } = useSWR<FrankfurterAPIResponse>(
+    url,
+    fetcher,
+    { shouldRetryOnError: false, revalidateOnFocus: false },
+  )
+
+  return {
+    rate: data?.rates.USD,
+    // Frankfurter sends "2026-10-28", the day the rate is from
+    date: data?.date,
+    // A missing USD rate counts as failing too
+    error: error ?? (data && !data.rates.USD ? new Error('No USD rate') : null),
+    isLoading,
+  }
+}

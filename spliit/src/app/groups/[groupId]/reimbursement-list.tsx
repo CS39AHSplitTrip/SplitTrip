@@ -6,9 +6,14 @@ import {
   getReimbursementExpense,
   getReimbursementKey,
 } from '@/lib/confirm-payment'
-import { Currency } from '@/lib/currency'
-import { useActiveUser } from '@/lib/hooks'
-import { getPaymentLinks, PaymentApp } from '@/lib/payment-links'
+import { Currency, getCurrency } from '@/lib/currency'
+import { useActiveUser, useUsdRate } from '@/lib/hooks'
+import {
+  getPaymentLinks,
+  getRateLabel,
+  PaymentApp,
+  toUsdCents,
+} from '@/lib/payment-links'
 import { formatCurrency } from '@/lib/utils'
 import { trpc } from '@/trpc/client'
 import { useLocale, useTranslations } from 'next-intl'
@@ -43,6 +48,24 @@ export function ReimbursementList({
   const activeUserId = useActiveUser(groupId)
   const { mutateAsync: createExpense, isPending: isSaving } =
     trpc.groups.expenses.create.useMutation()
+
+  // SplitTrip: non-USD groups get today's dollar rate so the Pay buttons
+  // still work, e.g. €90.00 ≈ $97.20 (#42). Balances stay in the group's currency.
+  const isUsd = currency.code === 'USD'
+  const needsUsdRate = !isUsd && currency.code.length > 0
+  const usd = useUsdRate(currency.code)
+  const usdCurrency = getCurrency('USD')
+  // "1 USD = 17.25 MXN" or "1 EUR = 1.1224 USD", whichever is easier to read
+  const rateLabel = (usdRate: number) => {
+    const { from, to, rate } = getRateLabel(currency.code, usdRate)
+    return {
+      from,
+      to,
+      rate: rate.toLocaleString(locale, {
+        maximumFractionDigits: rate >= 10 ? 2 : 4,
+      }),
+    }
+  }
 
   // SplitTrip: the transfer someone tapped "Pay with…" on, and the one we're
   // asking "Did you pay…?" about once they come back to the tab (#29).
@@ -124,7 +147,7 @@ export function ReimbursementList({
         // SplitTrip: the person getting paid, and the apps they can be paid on (#28)
         const payee = getParticipant(reimbursement.to)
         const paymentLinks = payee
-          ? getPaymentLinks(payee, reimbursement.amount, currency)
+          ? getPaymentLinks(payee, reimbursement.amount, currency, usd.rate)
           : []
         const key = getReimbursementKey(reimbursement)
         return (
@@ -152,10 +175,41 @@ export function ReimbursementList({
                   </Link>
                 </Button>
               </div>
-              <div>
+              <div className="text-right">
                 {formatCurrency(currency, reimbursement.amount, locale)}
+                {/* SplitTrip: the same amount in dollars, for non-USD groups (#42) */}
+                {needsUsdRate && usd.rate && (
+                  <span data-testid="usd-amount">
+                    {' ≈ '}
+                    {formatCurrency(
+                      usdCurrency,
+                      toUsdCents(reimbursement.amount, currency, usd.rate),
+                      locale,
+                    )}
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* SplitTrip: which rate we used and what day it's from (#42) */}
+            {needsUsdRate && usd.rate && usd.date && (
+              <p className="mt-1 text-xs text-muted-foreground text-right">
+                {t('usdRate', {
+                  ...rateLabel(usd.rate),
+                  date: new Date(usd.date).toLocaleDateString(locale, {
+                    month: 'short',
+                    day: 'numeric',
+                    // Frankfurter's date is a plain day, so read it in UTC
+                    timeZone: 'UTC',
+                  }),
+                })}
+              </p>
+            )}
+
+            {/* SplitTrip: Frankfurter failed or doesn't have this currency (#42) */}
+            {needsUsdRate && usd.error && (
+              <p className="mt-2 text-muted-foreground">{t('noUsdRate')}</p>
+            )}
 
             {/* SplitTrip: "Pay with…" buttons, one for each app the person getting paid signed up for (#28) */}
             {paymentLinks.length > 0 && (
@@ -213,17 +267,19 @@ export function ReimbursementList({
             )}
 
             {/* SplitTrip: no payment apps yet, so we nudge them to add one in Settings (#28) */}
-            {paymentLinks.length === 0 && payee && currency.code === 'USD' && (
-              <p className="mt-2 text-muted-foreground">
-                {t('noPaymentApp', { name: payee.name })}{' '}
-                <Link
-                  href={`/groups/${groupId}/edit`}
-                  className="underline underline-offset-4"
-                >
-                  {t('addPaymentApp')}
-                </Link>
-              </p>
-            )}
+            {paymentLinks.length === 0 &&
+              payee &&
+              (isUsd || (needsUsdRate && usd.rate)) && (
+                <p className="mt-2 text-muted-foreground">
+                  {t('noPaymentApp', { name: payee.name })}{' '}
+                  <Link
+                    href={`/groups/${groupId}/edit`}
+                    className="underline underline-offset-4"
+                  >
+                    {t('addPaymentApp')}
+                  </Link>
+                </p>
+              )}
           </div>
         )
       })}

@@ -1,6 +1,7 @@
 'use client'
 
 import { ActiveUserModal } from '@/app/groups/[groupId]/expenses/active-user-modal'
+import { BudgetProgress } from '@/app/groups/[groupId]/expenses/budget-progress'
 import { CreateFromReceiptButton } from '@/app/groups/[groupId]/expenses/create-from-receipt-button'
 import { ExpenseList } from '@/app/groups/[groupId]/expenses/expense-list'
 import ExportButton from '@/app/groups/[groupId]/export-button'
@@ -50,6 +51,7 @@ export default function GroupExpensesPageClient({
         </div>
 
         <CardContent className="p-0 pt-2 pb-4 sm:pb-6 flex flex-col gap-4 relative">
+          <BudgetProgress />
           <ExpenseList />
         </CardContent>
       </Card>

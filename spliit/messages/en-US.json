@@ -343,7 +343,9 @@
       "didYouPay": "Did you pay {name} {amount}?",
       "yesIPaid": "Yes, I paid",
       "notYet": "Not yet",
-      "confirmFailed": "Couldn't save the payment. Please try again."
+      "confirmFailed": "Couldn't save the payment. Please try again.",
+      "usdRate": "1 {from} = {rate} {to} ({date})",
+      "noUsdRate": "Couldn't get today's exchange rate"
     }
   },
   "Stats": {

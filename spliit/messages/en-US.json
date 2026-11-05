@@ -345,7 +345,12 @@
       "notYet": "Not yet",
       "confirmFailed": "Couldn't save the payment. Please try again.",
       "usdRate": "1 {from} = {rate} {to} ({date})",
-      "noUsdRate": "Couldn't get today's exchange rate"
+      "noUsdRate": "Couldn't get today's exchange rate",
+      "useMyRate": "Use my own rate",
+      "useTodaysRate": "Use today's rate",
+      "customRate": "Your rate: 1 {from} = {rate} {to}",
+      "rateFieldLabel": "Your exchange rate",
+      "invalidRate": "Enter a rate greater than 0"
     }
   },
   "Stats": {

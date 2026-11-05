@@ -19,6 +19,8 @@ export async function createGroup(groupFormValues: GroupFormValues) {
       information: groupFormValues.information,
       currency: groupFormValues.currency,
       currencyCode: groupFormValues.currencyCode,
+      // SplitTrip: the optional trip budget (#50)
+      budget: groupFormValues.budget,
       participants: {
         createMany: {
           // SplitTrip: also saves each member's payment usernames (#27)
@@ -319,6 +321,8 @@ export async function updateGroup(
       information: groupFormValues.information,
       currency: groupFormValues.currency,
       currencyCode: groupFormValues.currencyCode,
+      // SplitTrip: null clears the budget, undefined leaves it as it is (#50)
+      budget: groupFormValues.budget,
       participants: {
         deleteMany: existingGroup.participants.filter(
           (p) => !groupFormValues.participants.some((p2) => p2.id === p.id),

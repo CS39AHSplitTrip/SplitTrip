@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/use-toast'
 import { Participant } from '@/generated/prisma/browser'
 import { Reimbursement } from '@/lib/balances'
@@ -6,9 +7,15 @@ import {
   getReimbursementExpense,
   getReimbursementKey,
 } from '@/lib/confirm-payment'
-import { Currency } from '@/lib/currency'
-import { useActiveUser } from '@/lib/hooks'
-import { getPaymentLinks, PaymentApp } from '@/lib/payment-links'
+import { Currency, getCurrency } from '@/lib/currency'
+import { useActiveUser, useUsdRate } from '@/lib/hooks'
+import {
+  getPaymentLinks,
+  getRateLabel,
+  parseCustomRate,
+  PaymentApp,
+  toUsdCents,
+} from '@/lib/payment-links'
 import { formatCurrency } from '@/lib/utils'
 import { trpc } from '@/trpc/client'
 import { useLocale, useTranslations } from 'next-intl'
@@ -43,6 +50,35 @@ export function ReimbursementList({
   const activeUserId = useActiveUser(groupId)
   const { mutateAsync: createExpense, isPending: isSaving } =
     trpc.groups.expenses.create.useMutation()
+
+  // SplitTrip: non-USD groups get today's dollar rate so the Pay buttons
+  // still work, e.g. €90.00 ≈ $97.20 (#42). Balances stay in the group's currency.
+  const isUsd = currency.code === 'USD'
+  const needsUsdRate = !isUsd && currency.code.length > 0
+  const usd = useUsdRate(currency.code)
+  const usdCurrency = getCurrency('USD')
+  // The rate box reads like the label: "1 USD = [ ] MXN" for weaker currencies.
+  // With no Frankfurter rate we guess USD first, since most missing ones are.
+  const usdFirst = usd.rate ? usd.rate < 1 : true
+
+  // SplitTrip: rates people typed in with "Use my own rate", one per transfer (#43).
+  // Only kept in memory, so a reload goes back to Frankfurter's rate.
+  const [customRates, setCustomRates] = useState<Record<string, string>>({})
+  const setCustomRate = (key: string, value: string | undefined) =>
+    setCustomRates(({ [key]: _, ...rest }) =>
+      value === undefined ? rest : { ...rest, [key]: value },
+    )
+  // "1 USD = 17.25 MXN" or "1 EUR = 1.1224 USD", whichever is easier to read
+  const rateLabel = (usdRate: number) => {
+    const { from, to, rate } = getRateLabel(currency.code, usdRate)
+    return {
+      from,
+      to,
+      rate: rate.toLocaleString(locale, {
+        maximumFractionDigits: rate >= 10 ? 2 : 4,
+      }),
+    }
+  }
 
   // SplitTrip: the transfer someone tapped "Pay with…" on, and the one we're
   // asking "Did you pay…?" about once they come back to the tab (#29).
@@ -123,10 +159,20 @@ export function ReimbursementList({
       {reimbursements.map((reimbursement, index) => {
         // SplitTrip: the person getting paid, and the apps they can be paid on (#28)
         const payee = getParticipant(reimbursement.to)
-        const paymentLinks = payee
-          ? getPaymentLinks(payee, reimbursement.amount, currency)
-          : []
         const key = getReimbursementKey(reimbursement)
+
+        // SplitTrip: their own rate wins over Frankfurter's if it's valid (#43)
+        const typedRate = customRates[key]
+        const showRateField =
+          needsUsdRate && (typedRate !== undefined || !!usd.error)
+        const customRate =
+          typedRate !== undefined ? parseCustomRate(typedRate, usdFirst) : null
+        const rateError = !!typedRate?.trim() && customRate === null
+        const usdRate = customRate ?? usd.rate
+
+        const paymentLinks = payee
+          ? getPaymentLinks(payee, reimbursement.amount, currency, usdRate)
+          : []
         return (
           <div
             className="py-4"
@@ -152,10 +198,93 @@ export function ReimbursementList({
                   </Link>
                 </Button>
               </div>
-              <div>
+              <div className="text-right">
                 {formatCurrency(currency, reimbursement.amount, locale)}
+                {/* SplitTrip: the same amount in dollars, for non-USD groups (#42) */}
+                {needsUsdRate && usdRate && (
+                  <span data-testid="usd-amount">
+                    {' ≈ '}
+                    {formatCurrency(
+                      usdCurrency,
+                      toUsdCents(reimbursement.amount, currency, usdRate),
+                      locale,
+                    )}
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* SplitTrip: the rate they typed in (#43) */}
+            {needsUsdRate && customRate && (
+              <p className="mt-1 text-xs text-muted-foreground text-right">
+                {t('customRate', rateLabel(customRate))}
+              </p>
+            )}
+
+            {/* SplitTrip: which rate we used and what day it's from (#42) */}
+            {needsUsdRate && !customRate && usd.rate && usd.date && (
+              <p className="mt-1 text-xs text-muted-foreground text-right">
+                {t('usdRate', {
+                  ...rateLabel(usd.rate),
+                  date: new Date(usd.date).toLocaleDateString(locale, {
+                    month: 'short',
+                    day: 'numeric',
+                    // Frankfurter's date is a plain day, so read it in UTC
+                    timeZone: 'UTC',
+                  }),
+                })}{' '}
+                {/* SplitTrip: lets them type the rate they actually got (#43) */}
+                {typedRate === undefined && (
+                  <button
+                    type="button"
+                    className="underline underline-offset-4"
+                    onClick={() => setCustomRate(key, '')}
+                  >
+                    {t('useMyRate')}
+                  </button>
+                )}
+              </p>
+            )}
+
+            {/* SplitTrip: Frankfurter failed or doesn't have this currency (#42) */}
+            {needsUsdRate && usd.error && (
+              <p className="mt-2 text-muted-foreground">{t('noUsdRate')}</p>
+            )}
+
+            {/* SplitTrip: the "Use my own rate" box. It opens right away when
+                Frankfurter has no rate, so they can still pay (#43) */}
+            {showRateField && (
+              <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
+                <span>1 {usdFirst ? 'USD' : currency.code} =</span>
+                <Input
+                  className="w-24 h-8"
+                  inputMode="decimal"
+                  aria-label={t('rateFieldLabel')}
+                  aria-invalid={rateError}
+                  data-testid="custom-rate"
+                  // Jump straight into the box after tapping "Use my own rate"
+                  autoFocus={typedRate !== undefined}
+                  value={typedRate ?? ''}
+                  onChange={(event) => setCustomRate(key, event.target.value)}
+                />
+                <span>{usdFirst ? currency.code : 'USD'}</span>
+                {usd.rate && (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="px-1"
+                    onClick={() => setCustomRate(key, undefined)}
+                  >
+                    {t('useTodaysRate')}
+                  </Button>
+                )}
+                {rateError && (
+                  <p className="w-full text-right text-destructive">
+                    {t('invalidRate')}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* SplitTrip: "Pay with…" buttons, one for each app the person getting paid signed up for (#28) */}
             {paymentLinks.length > 0 && (
@@ -213,17 +342,19 @@ export function ReimbursementList({
             )}
 
             {/* SplitTrip: no payment apps yet, so we nudge them to add one in Settings (#28) */}
-            {paymentLinks.length === 0 && payee && currency.code === 'USD' && (
-              <p className="mt-2 text-muted-foreground">
-                {t('noPaymentApp', { name: payee.name })}{' '}
-                <Link
-                  href={`/groups/${groupId}/edit`}
-                  className="underline underline-offset-4"
-                >
-                  {t('addPaymentApp')}
-                </Link>
-              </p>
-            )}
+            {paymentLinks.length === 0 &&
+              payee &&
+              (isUsd || (needsUsdRate && usdRate)) && (
+                <p className="mt-2 text-muted-foreground">
+                  {t('noPaymentApp', { name: payee.name })}{' '}
+                  <Link
+                    href={`/groups/${groupId}/edit`}
+                    className="underline underline-offset-4"
+                  >
+                    {t('addPaymentApp')}
+                  </Link>
+                </p>
+              )}
           </div>
         )
       })}

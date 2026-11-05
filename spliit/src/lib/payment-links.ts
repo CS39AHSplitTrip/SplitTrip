@@ -31,6 +31,16 @@ export function getRateLabel(currencyCode: string, usdRate: number) {
     : { from: 'USD', to: currencyCode, rate: 1 / usdRate }
 }
 
+// Turns the rate someone typed into a USD rate (#43). The box reads the same
+// way as the label, so "1 USD = [18.50] MXN" means 1 MXN is 1/18.50 USD.
+// Gives back null for anything that isn't a number above 0.
+export function parseCustomRate(input: string, usdFirst: boolean) {
+  const text = input.trim().replace(',', '.')
+  const rate = Number(text)
+  if (!text || !Number.isFinite(rate) || rate <= 0) return null
+  return usdFirst ? 1 / rate : rate
+}
+
 // Makes a link for each app the person being paid signed up for (#27),
 // with the amount already filled in. Apps they left empty get no link.
 // Venmo and Cash App only work in the US, so the links are always in dollars:

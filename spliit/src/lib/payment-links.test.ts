@@ -1,5 +1,10 @@
 import { getCurrency } from '@/lib/currency'
-import { getPaymentLinks, getRateLabel, toUsdCents } from './payment-links'
+import {
+  getPaymentLinks,
+  getRateLabel,
+  parseCustomRate,
+  toUsdCents,
+} from './payment-links'
 
 // SplitTrip: checks the "Pay with…" link rules from #28
 describe('getPaymentLinks', () => {
@@ -94,5 +99,26 @@ describe('getRateLabel', () => {
     expect(label.from).toBe('USD')
     expect(label.to).toBe('MXN')
     expect(label.rate).toBeCloseTo(20)
+  })
+})
+
+// #43: the rate someone types in with "Use my own rate"
+describe('parseCustomRate', () => {
+  it('uses "1 EUR = 1.10 USD" as is, so €90.00 becomes $99.00', () => {
+    const rate = parseCustomRate('1.10', false)
+    expect(rate).toBe(1.1)
+    expect(toUsdCents(9000, getCurrency('EUR'), rate!)).toBe(9900)
+  })
+
+  it('flips "1 USD = 20 MXN" into a USD rate', () => {
+    expect(parseCustomRate('20', true)).toBeCloseTo(0.05)
+  })
+
+  it('accepts a comma as the decimal point', () => {
+    expect(parseCustomRate('1,10', false)).toBe(1.1)
+  })
+
+  it.each(['', '0', '-2', 'abc', '1.1.1'])('rejects "%s"', (input) => {
+    expect(parseCustomRate(input, false)).toBeNull()
   })
 })

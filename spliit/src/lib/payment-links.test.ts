@@ -1,5 +1,10 @@
 import { getCurrency } from '@/lib/currency'
-import { getPaymentLinks } from './payment-links'
+import {
+  getPaymentLinks,
+  getRateLabel,
+  parseCustomRate,
+  toUsdCents,
+} from './payment-links'
 
 // SplitTrip: checks the "Pay with…" link rules from #28
 describe('getPaymentLinks', () => {
@@ -39,13 +44,81 @@ describe('getPaymentLinks', () => {
     ).toEqual([])
   })
 
-  it('shows nothing for groups that are not in USD', () => {
+  it('shows nothing for non-USD groups until we have a rate', () => {
     expect(getPaymentLinks(anna, 2450, getCurrency('EUR'))).toEqual([])
+  })
+
+  // #42: non-USD groups pay in dollars using Frankfurter's rate
+  it('turns €90.00 into $97.20 at a rate of 1.08', () => {
+    expect(getPaymentLinks(anna, 9000, getCurrency('EUR'), 1.08)).toEqual([
+      {
+        app: 'venmo',
+        url: 'https://venmo.com/anna-k?txn=pay&amount=97.20&note=SplitTrip',
+      },
+      { app: 'paypal', url: 'https://paypal.me/annak/97.20' },
+      { app: 'cashApp', url: 'https://cash.app/$annak/97.20' },
+    ])
+  })
+
+  it('ignores the rate for USD groups', () => {
+    expect(getPaymentLinks({ paypalUsername: 'annak' }, 2450, usd, 2)).toEqual([
+      { app: 'paypal', url: 'https://paypal.me/annak/24.50' },
+    ])
   })
 
   it('always puts two decimals in the amount', () => {
     expect(getPaymentLinks({ paypalUsername: 'annak' }, 2000, usd)).toEqual([
       { app: 'paypal', url: 'https://paypal.me/annak/20.00' },
     ])
+  })
+})
+
+describe('toUsdCents', () => {
+  it('rounds to the nearest cent', () => {
+    // €10.00 × 1.1224 = $11.224, so 1122 cents
+    expect(toUsdCents(1000, getCurrency('EUR'), 1.1224)).toBe(1122)
+  })
+
+  it('handles currencies with no decimals like yen', () => {
+    // ¥1,500 × 0.0065 = $9.75
+    expect(toUsdCents(1500, getCurrency('JPY'), 0.0065)).toBe(975)
+  })
+})
+
+describe('getRateLabel', () => {
+  it('shows strong currencies as 1 EUR = x USD', () => {
+    expect(getRateLabel('EUR', 1.08)).toEqual({
+      from: 'EUR',
+      to: 'USD',
+      rate: 1.08,
+    })
+  })
+
+  it('flips weak currencies to 1 USD = x MXN', () => {
+    const label = getRateLabel('MXN', 0.05)
+    expect(label.from).toBe('USD')
+    expect(label.to).toBe('MXN')
+    expect(label.rate).toBeCloseTo(20)
+  })
+})
+
+// #43: the rate someone types in with "Use my own rate"
+describe('parseCustomRate', () => {
+  it('uses "1 EUR = 1.10 USD" as is, so €90.00 becomes $99.00', () => {
+    const rate = parseCustomRate('1.10', false)
+    expect(rate).toBe(1.1)
+    expect(toUsdCents(9000, getCurrency('EUR'), rate!)).toBe(9900)
+  })
+
+  it('flips "1 USD = 20 MXN" into a USD rate', () => {
+    expect(parseCustomRate('20', true)).toBeCloseTo(0.05)
+  })
+
+  it('accepts a comma as the decimal point', () => {
+    expect(parseCustomRate('1,10', false)).toBe(1.1)
+  })
+
+  it.each(['', '0', '-2', 'abc', '1.1.1'])('rejects "%s"', (input) => {
+    expect(parseCustomRate(input, false)).toBeNull()
   })
 })

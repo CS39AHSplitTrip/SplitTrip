@@ -32,6 +32,10 @@
     "exportJson": "Export to JSON",
     "exportCsv": "Export to CSV",
     "searchPlaceholder": "Search for an expense…",
+    "Budget": {
+      "spent": "Spent {spent} of {budget}",
+      "over": "{amount} over budget"
+    },
     "ActiveUserModal": {
       "title": "Who are you?",
       "description": "Tell us which participant you are to let us customize how the information is displayed.",
@@ -131,6 +135,11 @@
       "createDescription": "All amounts and balances will be in this currency.",
       "editDescription": "All amounts and balances will be in this currency. Changing this will NOT convert expenses already entered, except when the currency has different \"minor units\" than the current one (e.g. changing from US Dollar to Japanese Yen)",
       "customOption": "Custom"
+    },
+    "BudgetField": {
+      "label": "Trip budget (optional)",
+      "placeholder": "1000",
+      "description": "How much the whole group plans to spend, in the main currency."
     },
     "Participants": {
       "title": "Participants",
@@ -489,6 +498,7 @@
     "max10000": "Enter at most 10,000 characters.",
     "duplicateParticipantName": "Another participant already has this name.",
     "noSpacesInUsername": "Usernames can't contain spaces",
+    "budgetPositive": "Enter a budget greater than 0",
     "titleRequired": "Please enter a title.",
     "invalidNumber": "Invalid number.",
     "amountRequired": "You must enter an amount.",

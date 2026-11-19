@@ -93,6 +93,14 @@ export function GroupForm({
             venmoUsername: participant.venmoUsername ?? '',
             paypalUsername: participant.paypalUsername ?? '',
             cashAppCashtag: participant.cashAppCashtag ?? '',
+            // SplitTrip: shows the saved limit in dollars/euros, not cents (#51)
+            spendingLimit:
+              participant.spendingLimit !== null
+                ? amountAsDecimal(
+                    participant.spendingLimit,
+                    getCurrencyFromGroup(group),
+                  )
+                : null,
           })),
         }
       : {
@@ -170,20 +178,23 @@ export function GroupForm({
           } else {
             sendEvent({ event: 'group: create', props: {} }, `/groups`)
           }
-          // SplitTrip: the budget is typed in dollars/euros but saved in
-          // minor units, like expense amounts (#50)
-          const budget =
-            values.budget == null
-              ? values.budget
-              : amountAsMinorUnits(
-                  values.budget,
-                  getCurrencyFromGroup({
-                    currency: values.currency,
-                    currencyCode: values.currencyCode || null,
-                  }),
-                )
+          // SplitTrip: the budget (#50) and spending limits (#51) are typed
+          // in dollars/euros but saved in minor units, like expense amounts
+          const currency = getCurrencyFromGroup({
+            currency: values.currency,
+            currencyCode: values.currencyCode || null,
+          })
+          const toMinorUnits = (amount: number | null | undefined) =>
+            amount == null ? amount : amountAsMinorUnits(amount, currency)
           await onSubmit(
-            { ...values, budget },
+            {
+              ...values,
+              budget: toMinorUnits(values.budget),
+              participants: values.participants.map((participant) => ({
+                ...participant,
+                spendingLimit: toMinorUnits(participant.spendingLimit),
+              })),
+            },
             group?.participants.find((p) => p.name === activeUser)?.id ??
               undefined,
           )
@@ -415,6 +426,29 @@ export function GroupForm({
                       />
                     ))}
                   </div>
+                  {/* SplitTrip: the optional spending limit, under the payment boxes (#51) */}
+                  <FormField
+                    control={form.control}
+                    name={`participants.${index}.spendingLimit`}
+                    render={({ field }) => (
+                      <FormItem className="mb-2 sm:w-1/3">
+                        <FormLabel className="text-xs text-muted-foreground">
+                          {t('Participants.limitLabel')}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            className="text-base"
+                            type="text"
+                            inputMode="decimal"
+                            placeholder={t('Participants.limitPlaceholder')}
+                            {...field}
+                            value={field.value ?? ''}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </li>
               ))}
             </ul>

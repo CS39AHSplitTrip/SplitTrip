@@ -143,3 +143,43 @@ describe('groupFormSchema, trip budget', () => {
     ])
   })
 })
+
+// SplitTrip: the optional spending limit for each member (#51)
+describe('groupFormSchema, spending limit', () => {
+  const group = (spendingLimit: unknown) => ({
+    name: 'Lisbon trip',
+    currency: '€',
+    currencyCode: 'EUR',
+    participants: [{ name: 'Anna' }, { name: 'Boris', spendingLimit }],
+  })
+
+  it('accepts a limit greater than 0', () => {
+    const result = groupFormSchema.safeParse(group('300'))
+    expect(result.success && result.data.participants[1].spendingLimit).toBe(
+      300,
+    )
+  })
+
+  it.each(['', '   ', null])('treats %p as no limit', (spendingLimit) => {
+    const result = groupFormSchema.safeParse(group(spendingLimit))
+    expect(
+      result.success && result.data.participants[1].spendingLimit,
+    ).toBeNull()
+  })
+
+  it('leaves members without a limit alone', () => {
+    const result = groupFormSchema.safeParse(group('300'))
+    expect(
+      result.success && result.data.participants[0].spendingLimit,
+    ).toBeUndefined()
+  })
+
+  it.each(['0', '-50', 'abc'])('rejects %p', (spendingLimit) => {
+    const result = groupFormSchema.safeParse(group(spendingLimit))
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0]).toMatchObject({
+      message: 'limitPositive',
+      path: ['participants', 1, 'spendingLimit'],
+    })
+  })
+})

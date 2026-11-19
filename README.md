@@ -67,7 +67,7 @@ From Spliit, unchanged: groups you join by link with no account, adding and edit
 - Offline expense logging, the headline of our Postcard from the Future, is not built. Spliit's service worker caches the app's files and shows an offline page, but adding an expense still needs a connection. See [docs/HANDOFF.md](docs/HANDOFF.md).
 - Pay buttons always send dollars, because Venmo and Cash App only work in USD. There is no payment app for other currencies.
 - A typed exchange rate is kept only until the page reloads. It isn't saved to the database.
-- Expense photos, receipt scanning and automatic categories come from Spliit but are off by default. They need S3 storage or an OpenAI API key, set in `spliit/.env` (see `spliit/.env.example`). They are not turned on in the live app.
+- Expense photos, receipt scanning and automatic categories come from Spliit but are off by default. They need S3 storage or an OpenAI API key, set in `spliit/.env` (see `spliit/.env.example`).
 - There are no user accounts. Anyone with a group's link can see and edit it, the same as in Spliit.
 
 ## Project docs

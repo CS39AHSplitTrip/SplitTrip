@@ -18,7 +18,7 @@ Main files we added or changed:
 | `spliit/src/app/groups/[groupId]/reimbursement-list.tsx` | The settle-up list: pay buttons, dollar amounts, the rate box, the "Did you pay?" prompt |
 | `spliit/src/lib/budget.ts`, `.../expenses/budget-progress.tsx` | Trip budget colors and progress bar |
 | `spliit/src/lib/spending-limit.ts`, `.../balances/spending-limits.tsx`, `.../expenses/use-spending-limit-check.ts` | Spending limits on the Balances tab, and the note when a save pushes someone over |
-| `spliit/src/components/group-form.tsx` | Group settings, including payment usernames and the budget |
+| `spliit/src/components/group-form.tsx` | Group settings, including payment usernames, the budget and spending limits |
 | `spliit/messages/en-US.json` | All new text. SplitTrip strings are only in English |
 
 ## Known issues
@@ -36,7 +36,7 @@ Main files we added or changed:
 
 - Should a typed exchange rate be saved with the payment, so the group can see which rate was used later?
 - A member's spending counts their share of each expense, not what they paid, as #51 asked. We haven't checked with real users whether that's what they expect.
-- The over-limit note only shows to the person who saved the expense. Other members only see it on the Balances tab.
+- Should the rest of the group be told when someone goes over their limit? Right now the note only shows to the person who saved the expense, and everyone else sees it on the Balances tab.
 - Is there a payment app worth adding for groups outside the US, such as Wise or Revolut?
 
 ## Unplanted seed from Widening the Lens

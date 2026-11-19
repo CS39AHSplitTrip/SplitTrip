@@ -5,6 +5,7 @@ import {
   getExpensesByCategory,
   getExpensesByMonth,
   getRecurringSpending,
+  getShareByParticipant,
   getSpendingByCategory,
   getSpendingByParticipant,
   getSpendingOverTime,
@@ -519,5 +520,39 @@ describe('getSpendingByParticipant shares', () => {
     expect(result.reduce((sum, { share }) => sum + share, 0)).toBe(
       getTotalGroupSpending(expenses),
     )
+  })
+})
+
+// SplitTrip: what counts toward each member's spending limit (#51)
+describe('getShareByParticipant', () => {
+  const anna = { id: 'anna', name: 'Anna' }
+  const boris = { id: 'boris', name: 'Boris' }
+  const clara = { id: 'clara', name: 'Clara' }
+
+  it("counts each member's share, not what they paid", () => {
+    const dinner = makeExpense({
+      amount: 90_00,
+      paidBy: anna,
+      paidFor: [
+        { participant: anna, shares: 1 },
+        { participant: boris, shares: 1 },
+        { participant: clara, shares: 1 },
+      ],
+    })
+    expect(getShareByParticipant([dinner])).toEqual({
+      anna: 30_00,
+      boris: 30_00,
+      clara: 30_00,
+    })
+  })
+
+  it("doesn't count paying someone back", () => {
+    const payback = makeExpense({
+      amount: 50_00,
+      isReimbursement: true,
+      paidBy: boris,
+      paidFor: [{ participant: anna, shares: 1 }],
+    })
+    expect(getShareByParticipant([payback])).toEqual({})
   })
 })

@@ -17,6 +17,7 @@ import { useTranslations } from 'next-intl'
 import { Fragment, useEffect } from 'react'
 import { match } from 'ts-pattern'
 import { useCurrentGroup } from '../current-group-context'
+import { SpendingLimits } from './spending-limits'
 
 export default function BalancesAndReimbursements() {
   const utils = trpc.useUtils()
@@ -47,11 +48,19 @@ export default function BalancesAndReimbursements() {
           {isLoading ? (
             <BalancesLoading participantCount={group?.participants.length} />
           ) : (
-            <BalancesList
-              balances={balancesData.balances}
-              participants={group?.participants}
-              currency={getCurrencyFromGroup(group)}
-            />
+            <>
+              <BalancesList
+                balances={balancesData.balances}
+                participants={group?.participants}
+                currency={getCurrencyFromGroup(group)}
+              />
+              {/* SplitTrip: each member's spending limit (#51) */}
+              <SpendingLimits
+                groupId={groupId}
+                participants={group.participants}
+                currency={getCurrencyFromGroup(group)}
+              />
+            </>
           )}
         </CardContent>
       </Card>

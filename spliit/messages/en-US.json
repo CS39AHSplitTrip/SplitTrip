@@ -155,7 +155,9 @@
       "paypalLabel": "PayPal.me username (optional)",
       "paypalPlaceholder": "annak",
       "cashAppLabel": "Cash App $cashtag (optional)",
-      "cashAppPlaceholder": "annak"
+      "cashAppPlaceholder": "annak",
+      "limitLabel": "Spending limit (optional)",
+      "limitPlaceholder": "300"
     },
     "Settings": {
       "title": "Local settings",
@@ -340,6 +342,12 @@
   "Balances": {
     "title": "Balances",
     "description": "This is the amount that each participant paid or was paid for.",
+    "SpendingLimits": {
+      "title": "Spending limits",
+      "spent": "Spent {spent} of {limit}",
+      "over": "{amount} over limit",
+      "nowOver": "{name} is now over their spending limit"
+    },
     "Reimbursements": {
       "title": "Suggested reimbursements",
       "description": "Here are suggestions for optimized reimbursements between participants.",
@@ -499,6 +507,7 @@
     "duplicateParticipantName": "Another participant already has this name.",
     "noSpacesInUsername": "Usernames can't contain spaces",
     "budgetPositive": "Enter a budget greater than 0",
+    "limitPositive": "Enter a limit greater than 0",
     "titleRequired": "Please enter a title.",
     "invalidNumber": "Invalid number.",
     "amountRequired": "You must enter an amount.",

@@ -19,24 +19,29 @@ const paymentUsername = z
     z.string().max(50, 'max50').regex(/^\S+$/, 'noSpacesInUsername').nullable(),
   )
 
-// SplitTrip: the optional trip budget (#50). An empty box means no budget (null).
+// SplitTrip: an optional amount above 0, used for the trip budget (#50) and
+// each member's spending limit (#51). An empty box means no amount (null).
 // The form turns what was typed ("1000") into minor units before saving, like
 // expense amounts, so the same check runs on both sides.
-const tripBudget = z
-  .union([z.number(), z.string()])
-  .nullish()
-  .transform((value) => {
-    if (value === null || value === undefined) return null
-    if (typeof value === 'string' && value.trim() === '') return null
-    return Number(value)
-  })
-  .pipe(
-    z
-      .number({ error: 'budgetPositive' })
-      .positive('budgetPositive')
-      .max(10_000_000_00, 'amountTenMillion')
-      .nullable(),
-  )
+const optionalPositiveAmount = (message: string) =>
+  z
+    .union([z.number(), z.string()])
+    .nullish()
+    .transform((value) => {
+      if (value === null || value === undefined) return null
+      if (typeof value === 'string' && value.trim() === '') return null
+      return Number(value)
+    })
+    .pipe(
+      z
+        .number({ error: message })
+        .positive(message)
+        .max(10_000_000_00, 'amountTenMillion')
+        .nullable(),
+    )
+
+const tripBudget = optionalPositiveAmount('budgetPositive')
+const spendingLimit = optionalPositiveAmount('limitPositive')
 
 export const groupFormSchema = z
   .object({
@@ -54,6 +59,8 @@ export const groupFormSchema = z
           venmoUsername: paymentUsername.optional(),
           paypalUsername: paymentUsername.optional(),
           cashAppCashtag: paymentUsername.optional(),
+          // SplitTrip: how much this member plans to spend on the trip (#51)
+          spendingLimit: spendingLimit.optional(),
         }),
       )
       .min(1)

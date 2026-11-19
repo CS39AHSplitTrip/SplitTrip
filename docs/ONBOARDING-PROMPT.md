@@ -56,8 +56,17 @@ think the next priority is, and why.
 
 ## How our test went
 
-We pasted the prompt into a new chat and asked it to summarize the project and name the next priority.
+We pasted the prompt into a new chat with access to the repo and asked it to summarize the project and name the next priority. It read the repo and `docs/HANDOFF.md` before answering.
 
-- What it got right: _fill in after testing_
-- What it got wrong or missed: _fill in after testing_
-- What we changed in the prompt because of it: _fill in after testing_
+What it got right:
+- The summary was accurate: a Spliit fork for groups who travel, with payment links, one-tap confirm, dollar conversion with a typed rate, the trip budget and spending limits. It named offline logging as the one Postcard idea left.
+- It followed our working rules without being reminded. It said it hadn't run the tests yet instead of claiming things worked, and it offered to write the git commands for us to run instead of running them.
+- It found a detail we hadn't written down. `expense-form.tsx` already has `getTodayForDateInput()`, which is the fix for the "Yes, I paid" date bug.
+- Its order for the next steps matched ours: merge #51, do the two cleanups, then a short offline spike.
+
+What it got wrong or missed:
+- It said there was no PR for #51. We had just opened it, so either it read GitHub before the PR existed or it only looked at the branches.
+- It suggested splitting the docs into their own PR. That's a fair point in general, but we kept them together on purpose so the wrap-up lands on `main` in one merge.
+
+What we changed because of it:
+- It pointed out that `docs/HANDOFF.md` said "`main` and `dev` have the same code as of PR #53", which was already out of date because #51 came after #53. We rewrote that line so it doesn't name a PR number that goes stale.

@@ -25,12 +25,20 @@ export async function createGroup(groupFormValues: GroupFormValues) {
         createMany: {
           // SplitTrip: also saves each member's payment usernames (#27)
           data: groupFormValues.participants.map(
-            ({ name, venmoUsername, paypalUsername, cashAppCashtag }) => ({
+            ({
+              name,
+              venmoUsername,
+              paypalUsername,
+              cashAppCashtag,
+              spendingLimit,
+            }) => ({
               id: randomId(),
               name,
               venmoUsername,
               paypalUsername,
               cashAppCashtag,
+              // SplitTrip: the optional spending limit (#51)
+              spendingLimit,
             }),
           ),
         },
@@ -337,6 +345,8 @@ export async function updateGroup(
               venmoUsername: participant.venmoUsername,
               paypalUsername: participant.paypalUsername,
               cashAppCashtag: participant.cashAppCashtag,
+              // SplitTrip: null clears the limit, undefined leaves it as it is (#51)
+              spendingLimit: participant.spendingLimit,
             },
           })),
         createMany: {
@@ -348,6 +358,7 @@ export async function updateGroup(
               venmoUsername: participant.venmoUsername,
               paypalUsername: participant.paypalUsername,
               cashAppCashtag: participant.cashAppCashtag,
+              spendingLimit: participant.spendingLimit,
             })),
         },
       },

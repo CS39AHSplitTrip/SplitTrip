@@ -6,6 +6,7 @@ import { trpc } from '@/trpc/client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ExpenseForm } from './expense-form'
+import { useSpendingLimitCheck } from './use-spending-limit-check'
 
 export function CreateExpenseForm({
   groupId,
@@ -31,6 +32,11 @@ export function CreateExpenseForm({
 
   const utils = trpc.useUtils()
   const router = useRouter()
+  // SplitTrip: tells the group if this expense pushes someone over their limit (#51)
+  const checkSpendingLimits = useSpendingLimitCheck(
+    groupId,
+    group?.participants ?? [],
+  )
 
   if (!group || !categories) return null
 
@@ -40,20 +46,22 @@ export function CreateExpenseForm({
       categories={categories}
       expenseId={expenseId}
       onSubmit={async (expenseFormValues, participantId) => {
-        try {
-          await createExpenseMutateAsync({
-            groupId,
-            expenseFormValues,
-            participantId,
-            expenseId,
-          })
-        } catch (error) {
-          // The server may have created the expense and only the response
-          // been lost; retrying with the same id would then collide with it
-          // rather than create anything.
-          setExpenseId(randomId())
-          throw error
-        }
+        await checkSpendingLimits(async () => {
+          try {
+            await createExpenseMutateAsync({
+              groupId,
+              expenseFormValues,
+              participantId,
+              expenseId,
+            })
+          } catch (error) {
+            // The server may have created the expense and only the response
+            // been lost; retrying with the same id would then collide with it
+            // rather than create anything.
+            setExpenseId(randomId())
+            throw error
+          }
+        })
         utils.groups.expenses.invalidate()
         utils.groups.stats.invalidate()
         router.push(`/groups/${group.id}`)

@@ -4,6 +4,7 @@ import { RuntimeFeatureFlags } from '@/lib/featureFlags'
 import { trpc } from '@/trpc/client'
 import { useRouter } from 'next/navigation'
 import { ExpenseForm } from './expense-form'
+import { useSpendingLimitCheck } from './use-spending-limit-check'
 
 export function EditExpenseForm({
   groupId,
@@ -33,6 +34,11 @@ export function EditExpenseForm({
 
   const utils = trpc.useUtils()
   const router = useRouter()
+  // SplitTrip: tells the group if this change pushes someone over their limit (#51)
+  const checkSpendingLimits = useSpendingLimitCheck(
+    groupId,
+    group?.participants ?? [],
+  )
 
   if (!group || !categories || !expense) return null
 
@@ -42,11 +48,13 @@ export function EditExpenseForm({
       expense={expense}
       categories={categories}
       onSubmit={async (expenseFormValues, participantId) => {
-        await updateExpenseMutateAsync({
-          expenseId,
-          groupId,
-          expenseFormValues,
-          participantId,
+        await checkSpendingLimits(async () => {
+          await updateExpenseMutateAsync({
+            expenseId,
+            groupId,
+            expenseFormValues,
+            participantId,
+          })
         })
         utils.groups.expenses.invalidate()
         utils.groups.stats.invalidate()

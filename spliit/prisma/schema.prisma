@@ -36,6 +36,8 @@ model Participant {
   venmoUsername   String?
   paypalUsername  String?
   cashAppCashtag  String?
+  // SplitTrip: the optional spending limit, in minor units like expense amounts (#51)
+  spendingLimit   Int?
   expensesPaidBy  Expense[]
   expensesPaidFor ExpensePaidFor[]
 }

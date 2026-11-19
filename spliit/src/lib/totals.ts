@@ -237,6 +237,26 @@ export function getSpendingByParticipant(
     .sort((a, b) => b.paid - a.paid)
 }
 
+/**
+ * SplitTrip: each member's share of the group's expenses, by participant id,
+ * for the spending limits on the Balances tab (#51). It's what was spent on
+ * them, not what they paid, and reimbursements don't count.
+ */
+export function getShareByParticipant(
+  expenses: NonNullable<Awaited<ReturnType<typeof getGroupExpenses>>>,
+): Record<string, number> {
+  const shares: Record<string, number> = {}
+  for (const expense of expenses) {
+    if (expense.isReimbursement) continue
+    for (const [participantId, share] of getExpenseShares(
+      toShareInput(expense),
+    )) {
+      shares[participantId] = (shares[participantId] ?? 0) + share
+    }
+  }
+  return shares
+}
+
 export type MonthlySpending = {
   month: string
   total: number

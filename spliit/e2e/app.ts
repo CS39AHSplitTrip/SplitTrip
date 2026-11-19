@@ -59,6 +59,8 @@ export async function createGroup(
     paypalUsernames?: Record<string, string>
     // SplitTrip: the trip budget as typed, e.g. '1000' (#50)
     budget?: string
+    // SplitTrip: spending limits by member name, as typed, e.g. '300' (#51)
+    spendingLimits?: Record<string, string>
   },
 ): Promise<string> {
   await page.goto('/groups/create')
@@ -98,6 +100,13 @@ export async function createGroup(
       await fillStable(
         page.locator(`input[name="participants.${i}.paypalUsername"]`),
         paypal,
+      )
+    }
+    const limit = opts.spendingLimits?.[opts.participants[i]]
+    if (limit) {
+      await fillStable(
+        page.locator(`input[name="participants.${i}.spendingLimit"]`),
+        limit,
       )
     }
   }

@@ -109,3 +109,37 @@ describe('groupFormSchema, payment usernames', () => {
     ])
   })
 })
+
+// SplitTrip: the optional trip budget (#50)
+describe('groupFormSchema, trip budget', () => {
+  const group = (budget: unknown) => ({
+    name: 'Lisbon trip',
+    currency: '€',
+    currencyCode: 'EUR',
+    participants: [{ name: 'Anna' }, { name: 'Boris' }],
+    budget,
+  })
+
+  it('accepts a budget greater than 0', () => {
+    const result = groupFormSchema.safeParse(group('1000'))
+    expect(result.success && result.data.budget).toBe(1000)
+  })
+
+  it.each(['', '   ', null])('treats %p as no budget', (budget) => {
+    const result = groupFormSchema.safeParse(group(budget))
+    expect(result.success && result.data.budget).toBeNull()
+  })
+
+  it('leaves the budget alone when it is left out', () => {
+    const result = groupFormSchema.safeParse(group(undefined))
+    expect(result.success && result.data.budget).toBeUndefined()
+  })
+
+  it.each(['0', '-50', 'abc', 0, -50])('rejects %p', (budget) => {
+    const result = groupFormSchema.safeParse(group(budget))
+    expect(result.success).toBe(false)
+    expect(result.error?.issues.map((i) => i.message)).toEqual([
+      'budgetPositive',
+    ])
+  })
+})

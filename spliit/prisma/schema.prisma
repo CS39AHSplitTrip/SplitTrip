@@ -19,6 +19,8 @@ model Group {
   information  String?       @db.Text
   currency     String        @default("$")
   currencyCode String?
+  // SplitTrip: the optional trip budget, in minor units like expense amounts (#50)
+  budget       Int?
   participants Participant[]
   expenses     Expense[]
   activities   Activity[]

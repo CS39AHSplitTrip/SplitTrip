@@ -57,6 +57,8 @@ export async function createGroup(
     participants: string[]
     // SplitTrip: PayPal usernames by member name, for the "Pay with…" tests (#29)
     paypalUsernames?: Record<string, string>
+    // SplitTrip: the trip budget as typed, e.g. '1000' (#50)
+    budget?: string
   },
 ): Promise<string> {
   await page.goto('/groups/create')
@@ -64,6 +66,9 @@ export async function createGroup(
   // fillStable doubles as the hydration gate: once RHF keeps a value, React is
   // live and later clicks are safe.
   await fillStable(page.locator('input[name="name"]'), opts.name)
+  if (opts.budget) {
+    await fillStable(page.locator('input[name="budget"]'), opts.budget)
+  }
 
   for (let i = PREFILLED_PARTICIPANTS; i < opts.participants.length; i++) {
     await page.getByRole('button', { name: 'Add participant' }).click()

@@ -36,9 +36,15 @@ import { getGroup } from '@/lib/api'
 import { defaultCurrencyList, getCurrency } from '@/lib/currency'
 import {
   GROUP_INFORMATION_MAX,
+  GroupFormInput,
   groupFormSchema,
   GroupFormValues,
 } from '@/lib/schemas'
+import {
+  amountAsDecimal,
+  amountAsMinorUnits,
+  getCurrencyFromGroup,
+} from '@/lib/utils'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Save, Trash2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -67,7 +73,7 @@ export function GroupForm({
 }: Props) {
   const locale = useLocale()
   const t = useTranslations('GroupForm')
-  const form = useForm<GroupFormValues>({
+  const form = useForm<GroupFormInput, unknown, GroupFormValues>({
     resolver: zodResolver(groupFormSchema),
     defaultValues: group
       ? {
@@ -75,6 +81,11 @@ export function GroupForm({
           information: group.information ?? '',
           currency: group.currency ?? '',
           currencyCode: group.currencyCode ?? '',
+          // SplitTrip: shows the saved budget in dollars/euros, not cents (#50)
+          budget:
+            group.budget !== null
+              ? amountAsDecimal(group.budget, getCurrencyFromGroup(group))
+              : null,
           // SplitTrip: fills in the payment boxes with what's saved, or leaves them empty (#27)
           participants: group.participants.map((participant) => ({
             id: participant.id,
@@ -159,8 +170,20 @@ export function GroupForm({
           } else {
             sendEvent({ event: 'group: create', props: {} }, `/groups`)
           }
+          // SplitTrip: the budget is typed in dollars/euros but saved in
+          // minor units, like expense amounts (#50)
+          const budget =
+            values.budget == null
+              ? values.budget
+              : amountAsMinorUnits(
+                  values.budget,
+                  getCurrencyFromGroup({
+                    currency: values.currency,
+                    currencyCode: values.currencyCode || null,
+                  }),
+                )
           await onSubmit(
-            values,
+            { ...values, budget },
             group?.participants.find((p) => p.name === activeUser)?.id ??
               undefined,
           )
@@ -247,6 +270,31 @@ export function GroupForm({
                   </FormControl>
                   <FormDescription>
                     {t('CurrencyField.description')}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* SplitTrip: the optional trip budget (#50) */}
+            <FormField
+              control={form.control}
+              name="budget"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('BudgetField.label')}</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="text-base"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder={t('BudgetField.placeholder')}
+                      {...field}
+                      value={field.value ?? ''}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    {t('BudgetField.description')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -19,12 +19,32 @@ const paymentUsername = z
     z.string().max(50, 'max50').regex(/^\S+$/, 'noSpacesInUsername').nullable(),
   )
 
+// SplitTrip: the optional trip budget (#50). An empty box means no budget (null).
+// The form turns what was typed ("1000") into minor units before saving, like
+// expense amounts, so the same check runs on both sides.
+const tripBudget = z
+  .union([z.number(), z.string()])
+  .nullish()
+  .transform((value) => {
+    if (value === null || value === undefined) return null
+    if (typeof value === 'string' && value.trim() === '') return null
+    return Number(value)
+  })
+  .pipe(
+    z
+      .number({ error: 'budgetPositive' })
+      .positive('budgetPositive')
+      .max(10_000_000_00, 'amountTenMillion')
+      .nullable(),
+  )
+
 export const groupFormSchema = z
   .object({
     name: z.string().min(2, 'min2').max(50, 'max50'),
     information: z.string().max(GROUP_INFORMATION_MAX, 'max10000').optional(),
     currency: z.string().min(1, 'min1').max(5, 'max5'),
     currencyCode: z.union([z.string().length(3).nullish(), z.literal('')]), // ISO-4217 currency code
+    budget: tripBudget.optional(),
     participants: z
       .array(
         z.object({
@@ -54,6 +74,9 @@ export const groupFormSchema = z
   })
 
 export type GroupFormValues = z.infer<typeof groupFormSchema>
+// SplitTrip: what the form holds before zod cleans it up, e.g. the budget
+// as typed ("1000"). The resolver produces GroupFormValues on submit (#50).
+export type GroupFormInput = z.input<typeof groupFormSchema>
 
 const inputCoercedToNumber = z.union([
   z.number(),

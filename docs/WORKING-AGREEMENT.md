@@ -19,7 +19,7 @@ The AI drafted the stories, and the team decided what went in them. Each issue f
 
 The AI wrote code on a branch, and people ran git. Each story gets its own branch named after the issue (for example `42-pay-in-dollars`). The AI wrote the code and tests on that branch and ran the type check, unit tests and e2e tests. Team members made every commit, push and merge themselves. The AI never pushed.
 
-Every acceptance criterion gets a test. Each story's PR adds unit tests for the logic and Playwright e2e tests for the acceptance criteria. For example, #52 has one e2e test for each criterion in #50.
+Every acceptance criterion gets a test. Each story's PR adds unit tests for the logic and Playwright e2e tests for the acceptance criteria. For example, #54 has e2e tests covering every acceptance criterion in #51.
 
 People tested in the browser before merging. The AI's tests passing wasn't enough. A team member tried each feature in the running app with real-looking data. That's how we found that "1 MXN = 0.058 USD" was hard to read, and we changed it to "1 USD = 17.25 MXN" before merging.
 
@@ -34,7 +34,7 @@ Our branch rules came out of mistakes:
 
 Our code changes are labeled. Every change to Spliit's code has a `// SplitTrip:` comment with the issue number, so anyone can find what we added.
 
-We used the AI for product ideas too. In Widening the Lens, an "Edge Explorer" conversation with the AI pushed us to think about trips with no signal, other currencies and no payment app. Two of those became Epic 6, and offline became our seed.
+We used the AI for product ideas too. In Widening the Lens, an "Edge Explorer" conversation with the AI pushed us to think about trips with no signal, other currencies and no payment app. Other currencies became Epic 6, and offline became our seed.
 
 ## What changed and why
 

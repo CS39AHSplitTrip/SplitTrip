@@ -4,7 +4,7 @@ Where SplitTrip stands, and what a new team should know before picking it up. Fo
 
 ## Current state
 
-- `main` has everything described here, including #51. New work goes into `dev` first, so `dev` can be ahead of `main` between releases.
+- `main` has everything described here, including #51. New work goes into `dev` first, so `dev` can be ahead of `main` between releases. The live app on Vercel follows `main`, so a change only goes live once `dev` is merged into `main`.
 - Epics 1 to 7 are done. Epic 7, Plan a Trip Budget Together (#49), has the group budget (#50) and a spending limit for each member (#51).
 - Our changes in `spliit/src` are marked with a `// SplitTrip:` comment and the issue number, so `grep -rn "SplitTrip:" spliit/src` lists everything we changed in Spliit.
 

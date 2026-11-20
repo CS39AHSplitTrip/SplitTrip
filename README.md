@@ -43,8 +43,8 @@ npm run prettier       # format the code
 
 ## Deployment
 
-- The `dev` branch deploys the app to Vercel (the live link above). Vercel applies new database migrations when it builds.
-- The `main` branch publishes the landing page to GitHub Pages.
+- The `main` branch deploys the app to Vercel (the live link above) and publishes the landing page to GitHub Pages. Vercel applies new database migrations when it builds.
+- Pushes to `dev` and feature branches get a Vercel preview build, so a change can be checked before it reaches the live app.
 - Feature branches merge into `dev`, and `dev` merges into `main`. See [docs/WORKING-AGREEMENT.md](docs/WORKING-AGREEMENT.md).
 
 ## What works

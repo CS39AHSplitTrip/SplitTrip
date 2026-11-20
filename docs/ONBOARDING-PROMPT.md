@@ -41,7 +41,8 @@ How we work
   it should work when done" paragraph, and Given/When/Then acceptance criteria.
 - One branch per issue (e.g. 42-pay-in-dollars). PRs go into dev with
   "Closes #N". dev merges into main. Always use merge commits, never squash.
-  Never delete dev. dev deploys to Vercel, main deploys to GitHub Pages.
+  Never delete dev. main deploys the live app to Vercel and the landing page
+  to GitHub Pages. dev only gets Vercel preview builds.
 - Read the relevant Spliit code before proposing a story, so you don't
   describe a feature Spliit already has.
 - Every acceptance criterion gets a test. Run `npm test`, `npm run
